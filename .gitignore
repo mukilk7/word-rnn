@@ -1,0 +1,11 @@
+*.pyc
+*.txt
+*.csv
+*.log
+*.p
+.DS_Store
+.project
+.pydevproject
+loganalysis/model/*
+loganalysis/data/*
+loganalysis/logs/*
