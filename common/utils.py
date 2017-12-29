@@ -14,7 +14,7 @@ import tensorflow as tf
 from common.constants import *
 
 def maybe_download(local_file_name, remote_url):
-    """ Download text corpus if needed """
+    """ Download file if needed """
     logger = logging.getLogger(DEFAULT_LOGGER)
     if not os.path.exists(local_file_name):
         logger.debug("downloading file...")
@@ -26,9 +26,10 @@ def maybe_download(local_file_name, remote_url):
                 cmd_str = "wget -O " + local_file_name + " " + remote_url
             os.system(cmd_str)
             logger.info("File: %s is on disk!", local_file_name)
+            return True
         else:
             logger.error("Unsupported download url")
-    return
+    return False
 
 def save_as_text(new_file_name, list_to_save, sep):
     """ Save a list to as text file """

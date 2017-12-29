@@ -13,7 +13,7 @@ class ModelParams(object):
     """
     def __init__(self, batch_size=64, num_steps=24, data_steps_ahead=1, model_state_size=256,
                  model_learning_rate=1e-3, model_drop_out_rate=0.5, model_type="lstm",
-                 model_num_layers=2, embed_sz=10):
+                 model_num_layers=2, embed_sz=10, embedding=None):
         """
         params:
             batch_size: the size of a batch (sequence length)
@@ -25,6 +25,7 @@ class ModelParams(object):
             model_type: the rnn model architecture (basic, lstm or gru)
             model_num_layers: number of rnn layers
             embed_sz: character input embedding size
+            embedding: type of pre-trained word embeddings to use
         """
         # settings
         self.batch_size = batch_size

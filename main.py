@@ -8,6 +8,7 @@ this project.
 
 __author__ = "Mukil Kesavan"
 
+import os
 import sys
 
 #Setup project-wide logging
@@ -21,11 +22,16 @@ from wordrnn.data_processor import LocalDataProcessor
 from wordrnn.configs import ModelParams
 from wordrnn.model import WordRNN
 import common.utils as utils
+from common.constants import *
 
 _CMD_CHOICES = [
     "train",
     "generate",
     "anomaly-detect",
+]
+
+_EMBEDDING_CHOICES = [
+    "glove"
 ]
 
 
@@ -37,6 +43,8 @@ def init_cmdline_args():
 
     parser.add_option("--command", "-c", help="command to run %s" % _CMD_CHOICES,
                       type="choice", choices=_CMD_CHOICES, action="store", dest="cmd")
+    parser.add_option("--embedding", "-e", help="pre-trained embedding to use %s" % _EMBEDDING_CHOICES,
+                      type="choice", choices=_EMBEDDING_CHOICES, action="store", dest="embedding")
     parser.add_option("--num-epochs", help="train model for specified epochs",
                       action="store", dest="num_epochs")
     parser.add_option("--num-words",
@@ -91,6 +99,12 @@ def main():
     if len(sys.argv[1:]) <= 0:
         parser.print_help()
         sys.exit(0)
+    # Download word embeddings if required
+    if opts.embedding.lower() == "glove":
+        os.system("mkdir -p " + DEFAULT_EMBEDDINGS_DIR)
+        utils.maybe_download(DEFAULT_EMBEDDINGS_DIR + "/glove.zip", DEFAULT_GLOVE_EMBEDDINGS_URL)
+        if not os.path.exists(DEFAULT_GLOVE_EMBEDDINGS_FILE):
+            os.system("cd " + DEFAULT_EMBEDDINGS_DIR + " && unzip glove.zip")
     cmd_router(opts.cmd.lower(), opts)
 
 
