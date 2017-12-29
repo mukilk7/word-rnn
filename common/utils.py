@@ -11,6 +11,7 @@ import sys
 import logging
 from urllib.parse import urlparse
 import tensorflow as tf
+import numpy as np
 from common.constants import *
 
 def maybe_download(local_file_name, remote_url):
@@ -58,3 +59,51 @@ def reset_tensorboard_logs():
     if tf.gfile.Exists(DEFAULT_TENSORBOARD_LOG_DIR):
         tf.gfile.DeleteRecursively(DEFAULT_TENSORBOARD_LOG_DIR)
     tf.gfile.MakeDirs(DEFAULT_TENSORBOARD_LOG_DIR)
+
+
+def load_glove_embeddings():
+    """
+    Loads the glove word embeddings vectors
+    in a python dictionary
+
+    returns:
+        a dictionary consisting of word to embed vector mappings
+    """
+    embeddings = dict()
+    with open(DEFAULT_GLOVE_EMBEDDINGS_FILE, "r") as f:
+        for line in f:
+            ld = line.strip().split()
+            word = ld[0].strip()
+            embedding = list(map(lambda x: float(x), ld[1:]))
+            embeddings[word] = embedding
+    return embeddings
+
+
+def create_embeddings_matrix(vocab_to_idx, load_embeddings_func=load_glove_embeddings):
+    """
+    Creates an N x d embedding matrix where N is the
+    number of unique words in our vocabulary
+    and d is the embedding dimension. Words that
+    don't have a pre-trained embedding in our data source
+    will have a uniform random embedding.
+
+    params:
+        vocab_to_idx: dictionary mapping word to integer id
+        load_embeddings_func: function to use to load original word embeddings
+
+    returns:
+        N x d embedding matrix for the words in vocabulary
+    """
+    logger = logging.getLogger(DEFAULT_LOGGER)
+    logger.debug("loading embeddings from data source")
+    embeddings = load_embeddings_func()
+    logger.debug("creating embedding matrix")
+    embedding_dim = len(next(iter(embeddings.values())))
+    embedding_matrix = np.zeros((len(vocab_to_idx), embedding_dim))
+    for word, idx in vocab_to_idx.items():
+        embedding = embeddings.get(word)
+        if embedding is not None:
+            embedding_matrix[idx] = embedding
+        else:
+            embedding_matrix[idx] = np.random.uniform(-0.2, 0.2, embedding_dim)
+    return embedding_matrix

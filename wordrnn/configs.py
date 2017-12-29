@@ -37,6 +37,7 @@ class ModelParams(object):
         self.model_type = model_type # options: "basic", "lstm", "gru" <- simplified version of "lstm"
         self.model_num_layers = model_num_layers
         self.embed_sz = embed_sz
+        self.embedding = embedding
 
         #logger
         self.logger = logging.getLogger(DEFAULT_LOGGER)

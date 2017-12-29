@@ -12,10 +12,10 @@ class CustomWordTokenizer(object):
     """
     A custom word tokenizer based on nltk's
     word_tokenize functionality that also
-    treats newline character as a word.
+    optionally treats newline character as a word.
     """
-    def __init__(self):
-        pass
+    def __init__(self, ignore_new_lines = False):
+        self.ignore_new_lines = ignore_new_lines
     
     def tokenize(self, text):
         """
@@ -30,6 +30,8 @@ class CustomWordTokenizer(object):
         """
         if len(text.strip()) <= 0:
             return []
+        if self.ignore_new_lines:
+            return word_tokenize(text)
         tokens = []
         for sentence in sent_tokenize(text):
             tokens.extend(word_tokenize(sentence))

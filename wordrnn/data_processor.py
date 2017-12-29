@@ -73,7 +73,6 @@ class LocalDataProcessor(object):
         utils.maybe_download(self.input_filename_local, self.input_url)
         with open(self.input_filename_local, 'r', encoding='utf-8') as ff:
             raw_text = ff.read()
-        #tokenized_raw_text = word_tokenize(raw_text)
         tokenized_raw_text = CustomWordTokenizer().tokenize(raw_text)
         del raw_text
 
