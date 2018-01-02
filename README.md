@@ -2,7 +2,11 @@
 
 This project builds a Word-level Recurrent Neural Network in Python3 using TensorFlow that can be trained to:
 (i) generate text similar to the training corpus and (ii) find lines in a test file that are of not the same
-"style" as the lines found in the training corpus.
+"style" as the lines found in the training corpus. It supports optional pre-trained word embeddings from the Stanford Glove project.
+
+https://nlp.stanford.edu/projects/glove/
+
+If pre-trained word embeddings are not used, the embeddings will be learned as part of training.
 
 Applications:
 
@@ -28,3 +32,9 @@ To run the project, execute main.py from a unix-style command line shell and fol
 * Compute anomaly lines for an input test file using trained model:
 
 ./main.py -c anomaly-detect --test-input-file="./myfile.txt" --anomaly-threshold=95
+
+* Use pre-trained word embeddings with any of the above commands:
+
+./main.py -c train -e glove --num-epochs=10
+./main.py -c generate -e glove --num-words=100
+./main.py -c anomaly-detect -e glove --test-input-file="./myfile.txt" --anomaly-threshold=95
