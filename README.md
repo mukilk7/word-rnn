@@ -36,5 +36,7 @@ To run the project, execute main.py from a unix-style command line shell and fol
 * Use pre-trained word embeddings with any of the above commands:
 
 ./main.py -c train -e glove --num-epochs=10
+
 ./main.py -c generate -e glove --num-words=100
+
 ./main.py -c anomaly-detect -e glove --test-input-file="./myfile.txt" --anomaly-threshold=95
