@@ -61,6 +61,8 @@ class WordRNN(object):
         x = tf.placeholder(tf.int32, [self.configs.batch_size,self.configs.num_steps], name='inputs_placeholder')
         y = tf.placeholder(tf.int32, [self.configs.batch_size, self.configs.num_steps], name='labels_placeholder')
 
+        embedding_init_op = None
+        embed_placeholder = None
         # inputs -- embedding lets us map each input word to a higher dimensional vector.
         # We initialize each embedding using random real numbers via the default random
         # variable initializer (glorot) in tensorflow. For example, if we had 64 unique
@@ -68,7 +70,17 @@ class WordRNN(object):
         # vector of size 64 whereas our embedding can project this down to a smaller one.
         # One intuitive way of thinking about it is if you want to encode 1024 in binary
         # you would only need 10 bits vs a 1024 bit one-hot encoded vector.
-        embeddings = tf.get_variable('embeddings', [self.num_classes, self.configs.embed_sz])
+        if not self.configs.embedding:
+            # use random embedding that is also learned during training
+            embeddings = tf.get_variable('embeddings', [self.num_classes, self.configs.embed_sz])
+        else:
+            # use pre-trained embedding from external source
+            embeddings = tf.get_variable('embeddings', trainable=False,
+                                         initializer=tf.constant(0.0, shape=[self.num_classes, self.configs.embed_sz]))
+            embed_placeholder = tf.placeholder(tf.float32, [self.num_classes, self.configs.embed_sz],
+                                               name='embed_placeholder')
+            embedding_init_op = embeddings.assign(embed_placeholder)
+
         # results a [self.configs.batch_size, self.configs.num_steps, self.configs.embed_sz tensor]
         rnn_inputs = tf.nn.embedding_lookup(embeddings, x)
 
@@ -134,6 +146,8 @@ class WordRNN(object):
             final_state=final_state,
             total_loss=total_loss,
             train_step=train_step,
+            embed_placeholder=embed_placeholder,
+            embedding_init_op=embedding_init_op,
             saver=tf.train.Saver(),
-            params = self.configs.get_params()
+            params=self.configs.get_params(),
         )

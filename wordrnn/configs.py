@@ -52,7 +52,8 @@ class ModelParams(object):
              "model_drop_out_rate": self.model_drop_out_rate,
              "model_type": self.model_type,
              "model_num_layers": self.model_num_layers,
-             "embed_sz": self.embed_sz
+             "embed_sz": self.embed_sz,
+             "embedding": embedding,
         }
 
         #Dump parameters currently being used
@@ -71,10 +72,12 @@ class ModelParams(object):
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
             setattr(self, parameter, value)
+            self.params[parameter] = value
 
     def set_params_from_dict(self, paramdict):
         for k, v in paramdict.items():
             setattr(self, k, v)
+            self.params[k] = v
 
     def report_change(self, config_tag):
         try:

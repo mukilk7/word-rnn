@@ -61,6 +61,15 @@ def reset_tensorboard_logs():
     tf.gfile.MakeDirs(DEFAULT_TENSORBOARD_LOG_DIR)
 
 
+def maybe_download_embeddings(embedding_type):
+    # Download word embeddings if required
+    if embedding_type.lower() == "glove":
+        os.system("mkdir -p " + DEFAULT_EMBEDDINGS_DIR)
+        maybe_download(DEFAULT_EMBEDDINGS_DIR + "/glove.zip", DEFAULT_GLOVE_EMBEDDINGS_URL)
+        if not os.path.exists(DEFAULT_GLOVE_EMBEDDINGS_FILE):
+            os.system("cd " + DEFAULT_EMBEDDINGS_DIR + " && unzip glove.zip")
+
+
 def load_glove_embeddings():
     """
     Loads the glove word embeddings vectors
@@ -106,4 +115,5 @@ def create_embeddings_matrix(vocab_to_idx, load_embeddings_func=load_glove_embed
             embedding_matrix[idx] = embedding
         else:
             embedding_matrix[idx] = np.random.uniform(-0.2, 0.2, embedding_dim)
+    logger.debug("finished loading embeddings")
     return embedding_matrix

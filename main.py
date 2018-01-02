@@ -68,8 +68,12 @@ def cmd_router(cmd, opts):
     command requested.
     """
     utils.reset_tensorboard_logs()
+    utils.maybe_download_embeddings(opts.embedding)
     if cmd == "train":
-        default_config = ModelParams()
+        default_config = None
+        if opts.embedding.lower() == "glove":
+            default_config = ModelParams(embed_sz=DEFAULT_GLOVE_EMBEDDINGS_DIM,
+                                         embedding=opts.embedding.lower())
         data_processor = LocalDataProcessor(default_config,
                                             input_url=opts.input_url,
                                             local_filename=opts.input_file)
@@ -99,14 +103,7 @@ def main():
     if len(sys.argv[1:]) <= 0:
         parser.print_help()
         sys.exit(0)
-    # Download word embeddings if required
-    if opts.embedding.lower() == "glove":
-        os.system("mkdir -p " + DEFAULT_EMBEDDINGS_DIR)
-        utils.maybe_download(DEFAULT_EMBEDDINGS_DIR + "/glove.zip", DEFAULT_GLOVE_EMBEDDINGS_URL)
-        if not os.path.exists(DEFAULT_GLOVE_EMBEDDINGS_FILE):
-            os.system("cd " + DEFAULT_EMBEDDINGS_DIR + " && unzip glove.zip")
     cmd_router(opts.cmd.lower(), opts)
-
 
 if __name__ == '__main__':
     main()

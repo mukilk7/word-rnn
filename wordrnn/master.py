@@ -14,6 +14,7 @@ import logging
 import pickle
 from nltk.tokenize import word_tokenize
 from common.constants import *
+import common.utils as utils
 from wordrnn.data_processor import LocalDataProcessor
 from wordrnn.model import WordRNN
 from wordrnn.configs import ModelParams
@@ -40,6 +41,10 @@ def train(data_processor, model, num_epochs, verbose=True, save=True, isInFit=Fa
         merged = tf.summary.merge_all()
         train_writer = tf.summary.FileWriter(DEFAULT_TENSORBOARD_LOG_DIR, sess.graph)        
         sess.run(tf.global_variables_initializer())
+        # initialize word embedding if required
+        if model['embedding_init_op'] is not None:
+            embed_matrix = utils.create_embeddings_matrix(data_processor.vocab_to_idx)
+            sess.run(model['embedding_init_op'], feed_dict={model['embed_placeholder']: embed_matrix})
         training_losses = []
         for epoch_idx, epoch_data in enumerate(data_processor.gen_epoch_data(num_epochs)):
             training_loss = 0
@@ -95,11 +100,11 @@ def generate_text_from_model(textlen = 100):
     starting_words = word_tokenize("KING RICHARD III:")
     input_x = [vocab_to_idx[i] for i in starting_words]
     logger.debug(input_x)
-    predict_idx = predict(saved_params, num_classes, input_x, textlen = textlen)
+    predict_idx = predict(saved_params, num_classes, vocab_to_idx, input_x, textlen = textlen)
     return (" ".join(idx_to_vocab[min(i, num_classes)] for i in predict_idx))
 
 
-def predict(saved_params, num_classes, input_x, textlen=100, isEstimator=False, predict_configs=None):
+def predict(saved_params, num_classes, vocab_to_idx, input_x, textlen=100, isEstimator=False, predict_configs=None):
     def sampleWordFromPrediction(preds):
         """
         Samples a word based on prediction.
@@ -129,6 +134,10 @@ def predict(saved_params, num_classes, input_x, textlen=100, isEstimator=False, 
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
+        # initialize word embedding if required
+        if model['embedding_init_op'] is not None:
+            embed_matrix = utils.create_embeddings_matrix(vocab_to_idx)
+            sess.run(model['embedding_init_op'], feed_dict={model['embed_placeholder']: embed_matrix})
         model_directory = TRAINED_MODEL_NAME[:TRAINED_MODEL_NAME.rfind("/")]
         model['saver'].restore(sess, tf.train.latest_checkpoint(model_directory))
         predictions = tf.nn.softmax(model['logits'])
@@ -208,6 +217,10 @@ def compute_average_line_loss(local_filename, anomaly_percentile=95, input_url=N
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
+        # initialize word embedding if required
+        if model['embedding_init_op'] is not None:
+            embed_matrix = utils.create_embeddings_matrix(saved_vocab_to_idx)
+            sess.run(model['embedding_init_op'], feed_dict={model['embed_placeholder']: embed_matrix})
         model_directory = TRAINED_MODEL_NAME[:TRAINED_MODEL_NAME.rfind("/")]
         model['saver'].restore(sess, tf.train.latest_checkpoint(model_directory))
         init_state = None
