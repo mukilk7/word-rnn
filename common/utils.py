@@ -79,7 +79,7 @@ def load_glove_embeddings():
         a dictionary consisting of word to embed vector mappings
     """
     embeddings = dict()
-    with open(DEFAULT_GLOVE_EMBEDDINGS_FILE, "r") as f:
+    with open(DEFAULT_GLOVE_EMBEDDINGS_FILE, "r", encoding='utf-8') as f:
         for line in f:
             ld = line.strip().split()
             word = ld[0].strip()
