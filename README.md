@@ -10,7 +10,7 @@ If pre-trained word embeddings are not used, the embeddings will be learned as p
 
 Applications:
 
-Case 1: Can be used to generate new poems, essays, source code etc. depending on the training set
+Case 1: Can be used to generate new poems, essays, source code etc. depending on the training set  
 Case 2: Can be used to detect "fakes" that are similar in style to the training set on cursory glance
 
 To run the project, execute main.py from a unix-style command line shell and follow the help section.
@@ -35,8 +35,6 @@ To run the project, execute main.py from a unix-style command line shell and fol
 
 * Use pre-trained word embeddings with any of the above commands:
 
-./main.py -c train -e glove --num-epochs=10
-
-./main.py -c generate -e glove --num-words=100
-
-./main.py -c anomaly-detect -e glove --test-input-file="./myfile.txt" --anomaly-threshold=95
+./main.py -c train -e glove --num-epochs=10  
+./main.py -c generate -e glove --num-words=100  
+./main.py -c anomaly-detect -e glove --test-input-file="./myfile.txt" --anomaly-threshold=95  
