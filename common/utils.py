@@ -8,11 +8,13 @@ __author__ = "Mukil Kesavan"
 
 import os
 import sys
+import pickle
 import logging
 from urllib.parse import urlparse
 import tensorflow as tf
 import numpy as np
 from common.constants import *
+from wordrnn.configs import ModelParams
 
 def maybe_download(local_file_name, remote_url):
     """ Download file if needed """
@@ -63,7 +65,7 @@ def reset_tensorboard_logs():
 
 def maybe_download_embeddings(embedding_type):
     # Download word embeddings if required
-    if embedding_type.lower() == "glove":
+    if embedding_type is not None and embedding_type.lower() == "glove":
         os.system("mkdir -p " + DEFAULT_EMBEDDINGS_DIR)
         maybe_download(DEFAULT_EMBEDDINGS_DIR + "/glove.zip", DEFAULT_GLOVE_EMBEDDINGS_URL)
         if not os.path.exists(DEFAULT_GLOVE_EMBEDDINGS_FILE):
@@ -117,3 +119,18 @@ def create_embeddings_matrix(vocab_to_idx, load_embeddings_func=load_glove_embed
             embedding_matrix[idx] = np.random.uniform(-0.2, 0.2, embedding_dim)
     logger.debug("finished loading embeddings")
     return embedding_matrix
+
+def load_saved_model_params(param_file=TRAINED_MODEL_CONFIGS):
+    saved_params = None
+    vocab_to_idx = None
+    idx_to_vocab = None
+    num_classes = None
+    if os.path.exists(param_file):
+        with open(param_file, "rb") as f:
+            saved_params_dict = pickle.load(f)
+            vocab_to_idx = pickle.load(f)
+            idx_to_vocab = pickle.load(f)
+            num_classes = pickle.load(f)
+        saved_params = ModelParams()
+        saved_params.set_params_from_dict(saved_params_dict)
+    return saved_params, vocab_to_idx, idx_to_vocab, num_classes

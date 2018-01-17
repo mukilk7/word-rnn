@@ -70,10 +70,14 @@ def cmd_router(cmd, opts):
     utils.reset_tensorboard_logs()
     utils.maybe_download_embeddings(opts.embedding)
     if cmd == "train":
-        default_config = None
-        if opts.embedding.lower() == "glove":
-            default_config = ModelParams(embed_sz=DEFAULT_GLOVE_EMBEDDINGS_DIM,
-                                         embedding=opts.embedding.lower())
+        #look for saved params first to see if we're resuming training
+        default_config, _, _, _ = utils.load_saved_model_params()
+        if default_config is None:
+            if opts.embedding is not None and opts.embedding.lower() == "glove":
+                default_config = ModelParams(embed_sz=DEFAULT_GLOVE_EMBEDDINGS_DIM,
+                                             embedding=opts.embedding.lower())
+            else:
+                default_config = ModelParams()
         data_processor = LocalDataProcessor(default_config,
                                             input_url=opts.input_url,
                                             local_filename=opts.input_file)

@@ -134,5 +134,5 @@ class LocalDataProcessor(object):
         params:
             num_epochs: number of trainins epochs
         """
-        for i in range(num_epochs):
+        for _ in range(num_epochs):
             yield self.gen_epoch_batch_data()

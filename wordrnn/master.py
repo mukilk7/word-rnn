@@ -8,10 +8,11 @@ average line loss.
 
 __author__ = "Mukil Kesavan"
 
-import tensorflow as tf
-import numpy as np
-import logging
+import os
 import pickle
+import logging
+import numpy as np
+import tensorflow as tf
 from nltk.tokenize import word_tokenize
 from common.constants import *
 import common.utils as utils
@@ -37,7 +38,14 @@ def train(data_processor, model, num_epochs, verbose=True, save=True, isInFit=Fa
     logger = logging.getLogger(DEFAULT_LOGGER)
     logger.info("Training...")
     tf.set_random_seed(1142)
+
     with tf.Session() as sess:
+        # Resume Model Training if Possible
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname(DEFAULT_MODEL_DIR))
+        if ckpt and ckpt.model_checkpoint_path:
+            logger.debug("Loading existing model & resuming training...")
+            model['saver'].restore(sess, ckpt.model_checkpoint_path)
+        # Tensorboard summary
         merged = tf.summary.merge_all()
         train_writer = tf.summary.FileWriter(DEFAULT_TENSORBOARD_LOG_DIR, sess.graph)        
         sess.run(tf.global_variables_initializer())
@@ -61,18 +69,20 @@ def train(data_processor, model, num_epochs, verbose=True, save=True, isInFit=Fa
                                                                    model['train_step']],
                                                                   feed_dict)
                 training_loss += batch_loss
-            if verbose:
-                logger.debug("Avg. Training Loss for Epoch %s: %s", epoch_idx,
-                             training_loss / steps)
             training_losses.append(training_loss / steps)
             train_writer.add_summary(summary, epoch_idx)
-        if save:
-            model['saver'].save(sess, TRAINED_MODEL_NAME, global_step=num_epochs)
-            with open(TRAINED_MODEL_CONFIGS, "wb") as f:
-                pickle.dump(model['params'], f)
-                pickle.dump(data_processor.vocab_to_idx, f)
-                pickle.dump(data_processor.idx_to_vocab, f)
-                pickle.dump(data_processor.num_classes, f)
+            if save:
+                logger.debug("Saving model checkpoint for epoch %s", epoch_idx)
+                model['params']['trained_epochs'] = model['params']['trained_epochs'] + 1
+                model['saver'].save(sess, TRAINED_MODEL_NAME, global_step=model['params']['trained_epochs'])
+                with open(TRAINED_MODEL_CONFIGS, "wb") as f:
+                    pickle.dump(model['params'], f)
+                    pickle.dump(data_processor.vocab_to_idx, f)
+                    pickle.dump(data_processor.idx_to_vocab, f)
+                    pickle.dump(data_processor.num_classes, f)
+            if verbose:
+                logger.debug("Avg. Training Loss for Epoch %s: %s", model['params']['trained_epochs'],
+                             training_loss / steps)
     train_writer.close()
     if not isInFit:
         return training_losses
@@ -89,13 +99,7 @@ def generate_text_from_model(textlen = 100):
     """
     logger = logging.getLogger(DEFAULT_LOGGER)
     logger.debug("Loading saved model configs...")
-    saved_params = ModelParams()
-    with open(TRAINED_MODEL_CONFIGS, "rb") as f:
-                saved_params_dict = pickle.load(f)
-                vocab_to_idx = pickle.load(f)
-                idx_to_vocab = pickle.load(f)
-                num_classes = pickle.load(f)
-    saved_params.set_params_from_dict(saved_params_dict)
+    saved_params, vocab_to_idx, idx_to_vocab, num_classes = utils.load_saved_model_params()
     logger.debug("Generating text (num_words = %s)...", textlen)
     starting_words = word_tokenize("KING RICHARD III:")
     input_x = [vocab_to_idx[i] for i in starting_words]
@@ -197,29 +201,23 @@ def compute_average_line_loss(local_filename, anomaly_percentile=95, input_url=N
     logger = logging.getLogger(DEFAULT_LOGGER)
 
     logger.debug("Loading saved model configs...")
-    saved_params = ModelParams()
-    with open(TRAINED_MODEL_CONFIGS, "rb") as f:
-                saved_params_dict = pickle.load(f)
-                saved_vocab_to_idx = pickle.load(f)
-                saved_idx_to_vocab = pickle.load(f)
-                saved_num_classes = pickle.load(f)
-    saved_params.set_params_from_dict(saved_params_dict)
+    saved_params, vocab_to_idx, _, num_classes = utils.load_saved_model_params()
     saved_params.set_params(batch_size=1, num_steps=1, model_drop_out_rate=0)
     test_dp = LocalDataProcessor(saved_params, input_url=input_url,
                                  local_filename=local_filename,
-                                 num_classes=saved_num_classes)
+                                 num_classes=num_classes)
     linebreak_indices = [i for i, v in enumerate(test_dp.corpus) if v == test_dp.vocab_to_idx['\n']]
     linebreak_indices.append(len(test_dp.corpus))
     logger.debug("Num lines in test data file = %s", len(linebreak_indices))
 
-    model = WordRNN(saved_num_classes, saved_params).build_computation_graph()
+    model = WordRNN(num_classes, saved_params).build_computation_graph()
     avglinelosses = []
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         # initialize word embedding if required
         if model['embedding_init_op'] is not None:
-            embed_matrix = utils.create_embeddings_matrix(saved_vocab_to_idx)
+            embed_matrix = utils.create_embeddings_matrix(vocab_to_idx)
             sess.run(model['embedding_init_op'], feed_dict={model['embed_placeholder']: embed_matrix})
         model_directory = TRAINED_MODEL_NAME[:TRAINED_MODEL_NAME.rfind("/")]
         model['saver'].restore(sess, tf.train.latest_checkpoint(model_directory))
