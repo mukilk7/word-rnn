@@ -55,8 +55,8 @@ class ModelParams(object):
              "model_type": self.model_type,
              "model_num_layers": self.model_num_layers,
              "embed_sz": self.embed_sz,
-             "embedding": embedding,
-             "trained_epochs": trained_epochs,
+             "embedding": self.embedding,
+             "trained_epochs": self.trained_epochs,
         }
 
         #Dump parameters currently being used
