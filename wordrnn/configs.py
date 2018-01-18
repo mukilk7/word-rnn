@@ -39,7 +39,7 @@ class ModelParams(object):
         self.model_num_layers = model_num_layers
         self.embed_sz = embed_sz
         self.embedding = embedding
-        self.trained_epochs = 0
+        self.trained_epochs = trained_epochs
 
         #logger
         self.logger = logging.getLogger(DEFAULT_LOGGER)
