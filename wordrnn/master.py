@@ -41,7 +41,7 @@ def train(data_processor, model, num_epochs, verbose=True, save=True, isInFit=Fa
 
     with tf.Session() as sess:
         # Resume Model Training if Possible
-        ckpt = tf.train.get_checkpoint_state(os.path.dirname(DEFAULT_MODEL_DIR))
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname(TRAINED_MODEL_NAME))
         if ckpt and ckpt.model_checkpoint_path:
             logger.debug("Loading existing model & resuming training...")
             model['saver'].restore(sess, ckpt.model_checkpoint_path)
