@@ -13,7 +13,7 @@ class ModelParams(object):
     """
     def __init__(self, batch_size=64, num_steps=24, data_steps_ahead=1, model_state_size=256,
                  model_learning_rate=1e-3, model_drop_out_rate=0.5, model_type="lstm",
-                 model_num_layers=2, embed_sz=10, embedding=None, trained_epochs=0):
+                 model_num_layers=2, embed_sz=10, embedding=None, trained_epochs=0, use_attention=False):
         """
         params:
             batch_size: the size of a batch (sequence length)
@@ -27,6 +27,7 @@ class ModelParams(object):
             embed_sz: character input embedding size
             embedding: type of pre-trained word embeddings to use
             trained_epochs: the number of epochs for which model has been trained (initially 0)
+            use_attention: use attention mechanism with rnn output
         """
         # settings
         self.batch_size = batch_size
@@ -40,6 +41,7 @@ class ModelParams(object):
         self.embed_sz = embed_sz
         self.embedding = embedding
         self.trained_epochs = trained_epochs
+        self.use_attention = use_attention
 
         #logger
         self.logger = logging.getLogger(DEFAULT_LOGGER)
@@ -57,6 +59,7 @@ class ModelParams(object):
              "embed_sz": self.embed_sz,
              "embedding": self.embedding,
              "trained_epochs": self.trained_epochs,
+             "use_attention": self.use_attention,
         }
 
         #Dump parameters currently being used

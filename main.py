@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 This should be the main and only entry point
@@ -45,6 +45,8 @@ def init_cmdline_args():
                       type="choice", choices=_CMD_CHOICES, action="store", dest="cmd")
     parser.add_option("--embedding", "-e", help="pre-trained embedding to use %s" % _EMBEDDING_CHOICES,
                       type="choice", choices=_EMBEDDING_CHOICES, action="store", dest="embedding")
+    parser.add_option("--attention", "-a", help="add attention mechanism to rnn output",
+                      action="store_true", dest="use_attention", default=False)
     parser.add_option("--num-epochs", help="train model for specified epochs",
                       action="store", dest="num_epochs")
     parser.add_option("--num-words",
@@ -75,9 +77,10 @@ def cmd_router(cmd, opts):
         if default_config is None:
             if opts.embedding is not None and opts.embedding.lower() == "glove":
                 default_config = ModelParams(embed_sz=DEFAULT_GLOVE_EMBEDDINGS_DIM,
-                                             embedding=opts.embedding.lower())
+                                             embedding=opts.embedding.lower(),
+                                             use_attention=opts.use_attention)
             else:
-                default_config = ModelParams()
+                default_config = ModelParams(use_attention=opts.use_attention)
         data_processor = LocalDataProcessor(default_config,
                                             input_url=opts.input_url,
                                             local_filename=opts.input_file)

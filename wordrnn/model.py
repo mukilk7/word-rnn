@@ -112,6 +112,38 @@ class WordRNN(object):
         # construct unrolled RNN graph on-demand
         rnn_outputs, final_state = tf.nn.dynamic_rnn(cell, rnn_inputs, initial_state=init_state)
 
+        def compute_attended_output(_rnn_outputs):
+            """
+            Returns the attended output as a function of rnn output
+            at multiple timesteps.
+            """
+            self.logger.debug("adding attention mechanism to rnn outputs")
+            #_rnn_outputs = [batchsz x num_steps x model_state_size]
+            with tf.variable_scope('attention'):
+                Wa = tf.get_variable('Wa', [self.configs.num_steps, self.configs.num_steps])
+                ba = tf.get_variable('ba', [self.configs.num_steps], initializer=tf.constant_initializer(0.0))
+            # _rnn_outputs is reshaped to [batchsz x model_state_size x num_steps]
+            _rnn_outputs_reshaped = tf.transpose(_rnn_outputs, [0, 2, 1])
+            # _rnn_outputs is reshaped to [(batchsz x model_state_size) x num_steps]
+            _rnn_outputs_reshaped = tf.reshape(_rnn_outputs_reshaped, [-1, self.configs.num_steps])
+            # [(batchsz x model_state_size) x num_steps]
+            context_vec = tf.matmul(_rnn_outputs_reshaped, Wa)
+            # [batchsz x model_state_size x num_steps]
+            context_vec = tf.reshape(context_vec,
+                                     [self.configs.batch_size,
+                                      self.configs.model_state_size,
+                                      self.configs.num_steps]) + ba
+            # softmax doesn't change tensor shape
+            context_vec = tf.nn.softmax(context_vec)
+            # [batchsz x num_steps x model_state_size]
+            context_vec = tf.transpose(context_vec, [0, 2, 1])
+            # attended_output = [batchsz x num_steps x model_state_size]
+            attended_output = tf.multiply(_rnn_outputs, context_vec)
+            return attended_output
+
+        if self.configs.use_attention:
+            rnn_outputs = compute_attended_output(rnn_outputs)
+
         # share softmax layer weights and biases if this function is called multiple times
         with tf.variable_scope('softmax'):
             W = tf.get_variable('W', [self.configs.model_state_size, self.num_classes])
