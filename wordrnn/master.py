@@ -235,8 +235,8 @@ def compute_average_line_loss(local_filename, anomaly_percentile=95, input_url=N
                 prev_lbi = lbi
                 continue
             for wi in range(len(line_words) - 1):
-                x = np.array([[test_dp.corpus[wi]]])
-                y = np.array([[test_dp.corpus[wi + 1]]])
+                x = np.array([[line_words.corpus[wi]]])
+                y = np.array([[line_words.corpus[wi + 1]]])
                 if init_state is not None:
                     feed_dict = {model['x']: x, model['y']: y, model['init_state']: init_state}
                 else:
